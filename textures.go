@@ -1,4 +1,4 @@
-package helpers
+package gogl
 
 import (
 	"image/png"

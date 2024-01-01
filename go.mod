@@ -1,4 +1,4 @@
-module github.com/moltenwolfcub/goGlUtils
+module github.com/moltenwolfcub/gogl-utils
 
 go 1.21.5
 

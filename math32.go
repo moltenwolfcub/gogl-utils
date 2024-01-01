@@ -1,4 +1,4 @@
-package helpers
+package gogl
 
 /*
 Type conversions make the main code look messy
