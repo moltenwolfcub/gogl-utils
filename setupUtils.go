@@ -5,7 +5,7 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-// setups up a window with openGL and sdl
+// sets up a window with openGL and sdl
 // this window behaves like an fps game where
 // the mouse is in relative mode
 func SetupFPSWindow(title string, width, height int32) (window *sdl.Window, cleanup func()) {

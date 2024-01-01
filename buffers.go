@@ -40,7 +40,6 @@ func BufferData[T any](target uint32, data []T, usage uint32) {
 	gl.BufferData(target, len(data)*int(dataTypeSize), gl.Ptr(data), usage)
 }
 
-// change to interface
 type BufferLayout[T any] struct {
 	data     []T
 	segments []int32
