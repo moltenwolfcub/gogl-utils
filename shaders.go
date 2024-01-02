@@ -46,6 +46,29 @@ func LoadShader(path string, shaderType uint32) ShaderID {
 	return shaderId
 }
 
+func CreateProgramFromShaders(vertShader string, fragShader string) ProgramID {
+	vert := CreateShader(vertShader, gl.VERTEX_SHADER)
+	frag := CreateShader(fragShader, gl.FRAGMENT_SHADER)
+
+	shaderProgram := gl.CreateProgram()
+	gl.AttachShader(shaderProgram, uint32(vert))
+	gl.AttachShader(shaderProgram, uint32(frag))
+	gl.LinkProgram(shaderProgram)
+	var success int32
+	gl.GetProgramiv(shaderProgram, gl.LINK_STATUS, &success)
+	if success == gl.FALSE {
+		var logLength int32
+		gl.GetShaderiv(shaderProgram, gl.INFO_LOG_LENGTH, &logLength)
+		log := strings.Repeat("\x00", int(logLength+1))
+		gl.GetProgramInfoLog(shaderProgram, logLength, nil, gl.Str(log))
+		panic("Failed to link program:\n" + log)
+	}
+	gl.DeleteShader(uint32(vert))
+	gl.DeleteShader(uint32(frag))
+
+	return ProgramID(shaderProgram)
+}
+
 func CreateShader(shaderSource string, shaderType uint32) ShaderID {
 	shaderId := gl.CreateShader(shaderType)
 	shaderSource += "\x00"
@@ -65,7 +88,16 @@ func CreateShader(shaderSource string, shaderType uint32) ShaderID {
 	return ShaderID(shaderId)
 }
 
-type Shader struct {
+type Shader interface {
+	CheckShadersForChanges()
+	Use()
+
+	SetFloat(name string, value float32)
+	SetVec3(name string, value mgl32.Vec3)
+	SetMatrix4(name string, value mgl32.Mat4)
+}
+
+type ShaderWithPaths struct {
 	id          ProgramID
 	vertPath    string
 	vertModTime time.Time
@@ -73,10 +105,10 @@ type Shader struct {
 	fragModTime time.Time
 }
 
-func NewShader(vertPath string, fragPath string) *Shader {
+func NewShaderFromFilePaths(vertPath string, fragPath string) *ShaderWithPaths {
 	id := CreateProgram(vertPath, fragPath)
 
-	s := Shader{
+	s := ShaderWithPaths{
 		id:       id,
 		vertPath: vertPath,
 		fragPath: fragPath,
@@ -88,11 +120,11 @@ func NewShader(vertPath string, fragPath string) *Shader {
 	return &s
 }
 
-func (s *Shader) Use() {
+func (s *ShaderWithPaths) Use() {
 	UseProgram(s.id)
 }
 
-func (s *Shader) CheckShadersForChanges() {
+func (s *ShaderWithPaths) CheckShadersForChanges() {
 	vertModTime := getFileModTime(s.vertPath)
 	fragModTime := getFileModTime(s.fragPath)
 	if v, f := !vertModTime.Equal(s.vertModTime), !fragModTime.Equal(s.fragModTime); v || f {
@@ -111,20 +143,64 @@ func (s *Shader) CheckShadersForChanges() {
 	}
 }
 
-func (s *Shader) SetFloat(name string, value float32) {
+func (s *ShaderWithPaths) SetFloat(name string, value float32) {
 	name_cstr := gl.Str(name + "\x00")
 	loc := gl.GetUniformLocation(uint32(s.id), name_cstr)
 
 	gl.Uniform1f(loc, value)
 }
-func (s *Shader) SetMatrix4(name string, value mgl32.Mat4) {
+func (s *ShaderWithPaths) SetMatrix4(name string, value mgl32.Mat4) {
 	name_cstr := gl.Str(name + "\x00")
 	loc := gl.GetUniformLocation(uint32(s.id), name_cstr)
 
 	m4 := [16]float32(value)
 	gl.UniformMatrix4fv(loc, 1, false, &m4[0])
 }
-func (s *Shader) SetVec3(name string, value mgl32.Vec3) {
+func (s *ShaderWithPaths) SetVec3(name string, value mgl32.Vec3) {
+	name_cstr := gl.Str(name + "\x00")
+	loc := gl.GetUniformLocation(uint32(s.id), name_cstr)
+
+	v3 := [3]float32(value)
+	gl.Uniform3fv(loc, 1, &v3[0])
+}
+
+type EmbeddedShader struct {
+	id         ProgramID
+	vertShader string
+	fragShader string
+}
+
+func NewEmbeddedShader(vertShader string, fragShader string) *EmbeddedShader {
+	id := CreateProgramFromShaders(vertShader, fragShader)
+
+	s := EmbeddedShader{
+		id:         id,
+		vertShader: vertShader,
+		fragShader: fragShader,
+	}
+
+	return &s
+}
+
+func (s *EmbeddedShader) Use() {
+	UseProgram(s.id)
+}
+func (s *EmbeddedShader) CheckShadersForChanges() {}
+
+func (s *EmbeddedShader) SetFloat(name string, value float32) {
+	name_cstr := gl.Str(name + "\x00")
+	loc := gl.GetUniformLocation(uint32(s.id), name_cstr)
+
+	gl.Uniform1f(loc, value)
+}
+func (s *EmbeddedShader) SetMatrix4(name string, value mgl32.Mat4) {
+	name_cstr := gl.Str(name + "\x00")
+	loc := gl.GetUniformLocation(uint32(s.id), name_cstr)
+
+	m4 := [16]float32(value)
+	gl.UniformMatrix4fv(loc, 1, false, &m4[0])
+}
+func (s *EmbeddedShader) SetVec3(name string, value mgl32.Vec3) {
 	name_cstr := gl.Str(name + "\x00")
 	loc := gl.GetUniformLocation(uint32(s.id), name_cstr)
 

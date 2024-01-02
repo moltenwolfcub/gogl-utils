@@ -54,14 +54,14 @@ func (o *Object) calcNormals(triangleCount int) {
 	}
 }
 
-func (o Object) Draw(shader *Shader, drawMatrix mgl32.Mat4) {
+func (o Object) Draw(shader Shader, drawMatrix mgl32.Mat4) {
 	BindVertexArray(o.vao)
 
 	shader.SetMatrix4("model", drawMatrix)
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(o.verticies)/o.vertexStride))
 }
 
-func (o Object) DrawMultiple(shader *Shader, num int, drawMatrix func(int) mgl32.Mat4) {
+func (o Object) DrawMultiple(shader Shader, num int, drawMatrix func(int) mgl32.Mat4) {
 	BindVertexArray(o.vao)
 
 	for i := 0; i < num; i++ {

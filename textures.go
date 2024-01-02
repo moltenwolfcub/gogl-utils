@@ -1,6 +1,7 @@
 package gogl
 
 import (
+	"image"
 	"image/png"
 	"os"
 
@@ -20,6 +21,37 @@ func LoadTexture(filename string) TextureID {
 	if err != nil {
 		panic(err)
 	}
+
+	w := img.Bounds().Max.X
+	h := img.Bounds().Max.Y
+
+	pixels := make([]byte, w*h*4)
+	i := 0
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
+			r, g, b, a := img.At(x, y).RGBA()
+			pixels[i] = byte(r / 256)
+			i++
+			pixels[i] = byte(g / 256)
+			i++
+			pixels[i] = byte(b / 256)
+			i++
+			pixels[i] = byte(a / 256)
+			i++
+		}
+	}
+
+	texture := GenBindTexture()
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, int32(w), int32(h), 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(pixels))
+	gl.GenerateMipmap(gl.TEXTURE_2D)
+	return texture
+}
+
+func LoadTextureFromImage(img image.Image) TextureID {
 
 	w := img.Bounds().Max.X
 	h := img.Bounds().Max.Y
