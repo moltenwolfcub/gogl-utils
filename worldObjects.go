@@ -6,6 +6,7 @@ import (
 )
 
 type Object struct {
+	Type         string
 	Verticies    []float32 //in XYZ UV
 	VertexStride int       // 5 if using XYZ UV
 	normals      []float32
@@ -71,7 +72,9 @@ func (o Object) DrawMultiple(shader Shader, num int, drawMatrix func(int) mgl32.
 }
 
 func Cube(size float32) Object {
-	o := Object{}
+	o := Object{
+		Type: "cube",
+	}
 	o.Verticies = []float32{
 		-size / 2, -size / 2, -size / 2, 0.0, 0.0,
 		size / 2, size / 2, -size / 2, 1.0, 1.0,
@@ -124,7 +127,9 @@ func Cube(size float32) Object {
 }
 
 func Pentahedron(size float32) Object {
-	o := Object{}
+	o := Object{
+		Type: "pentahedron",
+	}
 	o.Verticies = []float32{
 		size / 2, -size / 2, size / 2, 0.0, 1.0,
 		-size / 2, -size / 2, -size / 2, 1.0, 0.0,
