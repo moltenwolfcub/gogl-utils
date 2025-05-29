@@ -92,6 +92,8 @@ type Shader interface {
 	CheckShadersForChanges()
 	Use()
 
+	SetBool(name string, value bool)
+	SetInt(name string, value int32)
 	SetFloat(name string, value float32)
 	SetVec3(name string, value mgl32.Vec3)
 	SetMatrix4(name string, value mgl32.Mat4)
@@ -143,6 +145,22 @@ func (s *ShaderWithPaths) CheckShadersForChanges() {
 	}
 }
 
+func (s *ShaderWithPaths) SetBool(name string, value bool) {
+	name_cstr := gl.Str(name + "\x00")
+	loc := gl.GetUniformLocation(uint32(s.id), name_cstr)
+
+	if value {
+		gl.Uniform1i(loc, 1)
+	} else {
+		gl.Uniform1i(loc, 0)
+	}
+}
+func (s *ShaderWithPaths) SetInt(name string, value int32) {
+	name_cstr := gl.Str(name + "\x00")
+	loc := gl.GetUniformLocation(uint32(s.id), name_cstr)
+
+	gl.Uniform1i(loc, value)
+}
 func (s *ShaderWithPaths) SetFloat(name string, value float32) {
 	name_cstr := gl.Str(name + "\x00")
 	loc := gl.GetUniformLocation(uint32(s.id), name_cstr)
@@ -187,6 +205,22 @@ func (s *EmbeddedShader) Use() {
 }
 func (s *EmbeddedShader) CheckShadersForChanges() {}
 
+func (s *EmbeddedShader) SetBool(name string, value bool) {
+	name_cstr := gl.Str(name + "\x00")
+	loc := gl.GetUniformLocation(uint32(s.id), name_cstr)
+
+	if value {
+		gl.Uniform1i(loc, 1)
+	} else {
+		gl.Uniform1i(loc, 0)
+	}
+}
+func (s *EmbeddedShader) SetInt(name string, value int32) {
+	name_cstr := gl.Str(name + "\x00")
+	loc := gl.GetUniformLocation(uint32(s.id), name_cstr)
+
+	gl.Uniform1i(loc, value)
+}
 func (s *EmbeddedShader) SetFloat(name string, value float32) {
 	name_cstr := gl.Str(name + "\x00")
 	loc := gl.GetUniformLocation(uint32(s.id), name_cstr)
